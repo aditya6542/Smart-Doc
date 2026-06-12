@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Document Studio - Formatted Plain Text to PDF</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Convert plain text to professional A4/Letter documents, customize layout themes, edit with a full TipTap suite, and export high-quality PDFs and DOCX files.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/></svg>">
+  
+  <!-- Google Fonts with CORS enabled -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- External JS Libraries for Exporter / Branding -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/docx@8.2.4/build/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Importmap for TipTap ESM modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@tiptap/core": "https://esm.sh/@tiptap/core@2.2.4",
+        "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.2.4",
+        "@tiptap/pm": "https://esm.sh/@tiptap/pm@2.2.4",
+        "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@2.2.4",
+        "@tiptap/extension-color": "https://esm.sh/@tiptap/extension-color@2.2.4",
+        "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@2.2.4",
+        "@tiptap/extension-highlight": "https://esm.sh/@tiptap/extension-highlight@2.2.4",
+        "@tiptap/extension-font-family": "https://esm.sh/@tiptap/extension-font-family@2.2.4",
+        "@tiptap/extension-table": "https://esm.sh/@tiptap/extension-table@2.2.4",
+        "@tiptap/extension-table-row": "https://esm.sh/@tiptap/extension-table-row@2.2.4",
+        "@tiptap/extension-table-cell": "https://esm.sh/@tiptap/extension-table-cell@2.2.4",
+        "@tiptap/extension-table-header": "https://esm.sh/@tiptap/extension-table-header@2.2.4",
+        "@tiptap/extension-task-list": "https://esm.sh/@tiptap/extension-task-list@2.2.4",
+        "@tiptap/extension-task-item": "https://esm.sh/@tiptap/extension-task-item@2.2.4",
+        "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@2.2.4",
+        "@tiptap/extension-image": "https://esm.sh/@tiptap/extension-image@2.2.4",
+        "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.2.4"
+      }
+    }
+  </script>
+</head>
+<body class="transition-colors duration-200">
+  <div class="app-container" id="appRoot">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar flex flex-col justify-between py-6 px-4">
+      <div>
+        <!-- App Title / Logo -->
+        <div class="flex items-center gap-3 px-2 mb-8">
+          <div class="p-2 bg-brand-500 rounded-xl text-white shadow-lg shadow-brand-500/30">
+            <i data-lucide="file-text" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-extrabold tracking-tight text-slate-800 dark:text-white leading-none">Smart Doc</h1>
+            <span class="text-[10px] font-semibold text-brand-500 tracking-wider uppercase">Studio</span>
+          </div>
+        </div>
+
+        <!-- Primary Action -->
+        <button id="btnNewDoc" class="w-full py-3 px-4 mb-6 flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-semibold rounded-xl transition-all shadow-md shadow-brand-500/20">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          <span>New Document</span>
+        </button>
+
+        <!-- Navigation items -->
+        <nav class="space-y-1">
+          <button id="navDashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-brand-500 bg-brand-50 dark:bg-brand-900/20 rounded-lg transition-all">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span>Dashboard</span>
+          </button>
+          <button id="navTemplates" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all">
+            <i data-lucide="files" class="w-5 h-5"></i>
+            <span>Templates Library</span>
+          </button>
+          <button id="navAPIKeys" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all">
+            <i data-lucide="key" class="w-5 h-5"></i>
+            <span>AI Configuration</span>
+          </button>
+        </nav>
+
+        <!-- Saved documents menu list -->
+        <div class="mt-8">
+          <div class="flex items-center justify-between px-2 mb-3">
+            <h3 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Recent Documents</h3>
+            <button id="btnClearAllDocs" class="text-[10px] text-red-500 hover:text-red-700 font-medium hover:underline transition-all hidden">Clear All</button>
+          </div>
+          <div class="space-y-1 max-h-[40vh] overflow-y-auto" id="sidebarDocList">
+            <!-- Dynamically populated -->
+            <p class="text-xs text-slate-400 dark:text-slate-500 px-2 py-1">No documents saved.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Profile / Theme Toggle -->
+      <div>
+        <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
+          <button id="themeToggle" class="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Toggle Light/Dark Theme">
+            <i data-lucide="moon" class="w-5 h-5" id="themeIcon"></i>
+          </button>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-brand-500/20">M</div>
+            <div class="text-left">
+              <p class="text-xs font-bold leading-none text-slate-800 dark:text-white">MEHTA</p>
+              <span class="text-[9px] text-brand-500 font-semibold uppercase">Code by MEHTA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content flex flex-col">
+      
+      <!-- DASHBOARD VIEW -->
+      <div id="viewDashboard" class="flex-1 overflow-y-auto p-8 space-y-8">
+        <!-- Dashboard Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Welcome to Document Studio</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Transform plain text into high-fidelity formatted publications in seconds. <span class="font-semibold text-brand-500">Made with ❤️ by MEHTA</span></p>
+          </div>
+          <!-- Quick stats widget -->
+          <div class="flex items-center gap-3">
+            <div class="glass-card py-2.5 px-4 text-center">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Total Documents</span>
+              <p id="statTotalDocs" class="text-lg font-bold text-slate-800 dark:text-white">0</p>
+            </div>
+            <div class="glass-card py-2.5 px-4 text-center">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Words Processed</span>
+              <p id="statTotalWords" class="text-lg font-bold text-brand-500">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw Text Box Quick Converter Card -->
+        <section class="glass-card p-6 border-brand-500/20 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-500/5 rounded-full blur-2xl"></div>
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+            <i data-lucide="zap" class="text-amber-500"></i>
+            <span>Quick Text-to-Doc AI Formatter</span>
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Paste raw text, logs, or unformatted summaries. Our heuristic formats headings, lists, tables, code blocks, and lists into a structured layout.</p>
+          
+          <div class="space-y-4">
+            <textarea id="quickRawText" rows="6" placeholder="Paste your plain text here (e.g. Markdown, meeting transcripts, reports)..." class="w-full p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"></textarea>
+            
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <label for="quickTemplateSelect" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Layout Base:</label>
+                <select id="quickTemplateSelect" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none text-slate-700 dark:text-slate-300">
+                  <option value="default">Default Modern Theme</option>
+                  <option value="academic">Academic (Times Double Spaced)</option>
+                  <option value="business">Business Corporate (Sleek)</option>
+                  <option value="legal">Legal formal (Serif Capitalized)</option>
+                  <option value="notes">Notes / Handwriting theme</option>
+                </select>
+              </div>
+              <button id="btnQuickConvert" class="py-2.5 px-6 bg-slate-800 hover:bg-slate-900 dark:bg-brand-500 dark:hover:bg-brand-600 text-white font-semibold rounded-xl text-xs transition-all flex items-center gap-2 hover:shadow-lg hover:shadow-slate-800/10">
+                <i data-lucide="wand-2" class="w-4 h-4"></i>
+                <span>Convert & Edit Document</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Template Gallery Carousel Segment -->
+        <section class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Premium Presets Gallery</h3>
+            <button id="btnViewAllTemplates" class="text-xs text-brand-500 font-bold hover:underline">Browse All Templates</button>
+          </div>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="recentTemplatesGrid">
+            <!-- Populated dynamically -->
+          </div>
+        </section>
+
+        <!-- Saved documents library grid -->
+        <section class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Your Document Studio Library</h3>
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                <input id="searchDocs" type="text" placeholder="Search saved docs..." class="pl-9 pr-4 py-2 text-xs w-48 sm:w-60 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-1 focus:ring-brand-500 outline-none transition-all">
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="documentsGrid">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+      </div>
+
+      <!-- EDITOR WORKSPACE VIEW (Hidden initially) -->
+      <div id="viewEditor" class="hidden flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Editor Header (Title, Back, Status, Actions) -->
+        <header class="main-content-header border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-4 flex items-center justify-between gap-4 z-20">
+          <div class="flex items-center gap-3">
+            <button id="btnBackToDashboard" class="p-2 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Back to Dashboard">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <div>
+              <div class="flex items-center gap-2">
+                <input id="docTitleInput" type="text" value="Untitled Document" class="bg-transparent text-lg font-bold text-slate-800 dark:text-white outline-none border-b border-transparent focus:border-slate-300 dark:focus:border-slate-700 px-1 py-0.5 rounded transition-all max-w-[250px] sm:max-w-sm">
+                <button id="btnRenameDoc" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Rename"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+              </div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="saveStatus" class="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
+                  <i data-lucide="cloud-check" class="w-3.5 h-3.5"></i>
+                  <span>Saved</span>
+                </span>
+                <span class="text-[9px] text-slate-400">•</span>
+                <span id="wordCharStats" class="text-[10px] text-slate-400 font-medium">0 words (0 chars)</span>
+                <span class="text-[9px] text-slate-400">•</span>
+                <span id="readingTimeStat" class="text-[10px] text-slate-400 font-medium">1 min read</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Active cursors simulator -->
+            <div class="hidden sm:flex items-center -space-x-1.5 mr-2">
+              <div class="w-6 h-6 rounded-full border border-white dark:border-slate-900 bg-sky-400 flex items-center justify-center text-[9px] font-bold text-white uppercase" title="Alice (Mock User)">A</div>
+              <div class="w-6 h-6 rounded-full border border-white dark:border-slate-900 bg-amber-400 flex items-center justify-center text-[9px] font-bold text-white uppercase" title="Bob (Mock User)">B</div>
+            </div>
+
+            <!-- Share Panel -->
+            <button id="btnOpenShare" class="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all flex items-center gap-2">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">Share</span>
+            </button>
+
+            <!-- Export Selector -->
+            <div class="relative">
+              <button id="btnExportMenu" class="px-4 py-2 text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white rounded-xl transition-all flex items-center gap-2 shadow-md shadow-brand-500/10">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Export</span>
+                <i data-lucide="chevron-down" class="w-3 h-3"></i>
+              </button>
+              
+              <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-48 glass shadow-lg rounded-xl py-2 z-50 border border-slate-200/50">
+                <button id="exportPDF" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 flex items-center gap-2.5">
+                  <i data-lucide="file" class="w-4 h-4 text-red-500"></i>
+                  <span>Export as PDF</span>
+                </button>
+                <button id="exportDOCX" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 flex items-center gap-2.5">
+                  <i data-lucide="file-type" class="w-4 h-4 text-blue-500"></i>
+                  <span>Export as Word (.docx)</span>
+                </button>
+                <button id="exportHTML" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 flex items-center gap-2.5">
+                  <i data-lucide="code" class="w-4 h-4 text-amber-500"></i>
+                  <span>Export as HTML</span>
+                </button>
+                <button id="exportMD" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 flex items-center gap-2.5">
+                  <i data-lucide="hash" class="w-4 h-4 text-emerald-500"></i>
+                  <span>Export as Markdown</span>
+                </button>
+                <button id="exportTXT" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 flex items-center gap-2.5">
+                  <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                  <span>Export as Plain Text</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- TipTap Editor Toolbar -->
+        <div class="toolbar-container border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-2 flex flex-wrap items-center gap-1.5 overflow-x-auto z-10">
+          <!-- History -->
+          <button id="tbUndo" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Undo"><i data-lucide="undo" class="w-4 h-4"></i></button>
+          <button id="tbRedo" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Redo"><i data-lucide="redo" class="w-4 h-4"></i></button>
+          
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+
+          <!-- Typography / Fonts -->
+          <select id="tbFontFamily" class="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none text-slate-700 dark:text-slate-300">
+            <option value="Inter">Sans (Inter)</option>
+            <option value="Lora">Serif (Lora)</option>
+            <option value="Playfair Display">Formal (Playfair)</option>
+            <option value="Outfit">Modern (Outfit)</option>
+            <option value="JetBrains Mono">Monospace (JetBrains)</option>
+            <option value="Caveat">Notes (Caveat)</option>
+          </select>
+
+          <!-- Font Size -->
+          <select id="tbFontSize" class="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none text-slate-700 dark:text-slate-300">
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px" selected>16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="28px">28px</option>
+            <option value="32px">32px</option>
+            <option value="36px">36px</option>
+            <option value="48px">48px</option>
+          </select>
+
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+
+          <!-- Font styling -->
+          <button id="tbBold" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 font-bold" title="Bold"><i data-lucide="bold" class="w-4 h-4"></i></button>
+          <button id="tbItalic" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 italic" title="Italic"><i data-lucide="italic" class="w-4 h-4"></i></button>
+          <button id="tbUnderline" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 underline" title="Underline"><i data-lucide="underline" class="w-4 h-4"></i></button>
+          <button id="tbStrike" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 line-through" title="Strikethrough"><i data-lucide="strikethrough" class="w-4 h-4"></i></button>
+
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+
+          <!-- Colors -->
+          <div class="relative flex items-center gap-1">
+            <button id="tbColorBtn" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Text Color"><i data-lucide="baseline" class="w-4 h-4"></i></button>
+            <input type="color" id="tbColorPicker" value="#000000" class="w-4 h-4 border border-slate-300 rounded cursor-pointer p-0 bg-transparent absolute opacity-0 pointer-events-none">
+            
+            <button id="tbHighlightBtn" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Highlight Color"><i data-lucide="highlighter" class="w-4 h-4"></i></button>
+            <input type="color" id="tbHighlightPicker" value="#fef08a" class="w-4 h-4 border border-slate-300 rounded cursor-pointer p-0 bg-transparent absolute opacity-0 pointer-events-none">
+          </div>
+
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+
+          <!-- Alignment -->
+          <button id="tbAlignLeft" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Align Left"><i data-lucide="align-left" class="w-4 h-4"></i></button>
+          <button id="tbAlignCenter" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Align Center"><i data-lucide="align-center" class="w-4 h-4"></i></button>
+          <button id="tbAlignRight" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Align Right"><i data-lucide="align-right" class="w-4 h-4"></i></button>
+          <button id="tbAlignJustify" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Justify"><i data-lucide="align-justify" class="w-4 h-4"></i></button>
+
+          <!-- Spacing -->
+          <select id="tbLineSpacing" class="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none text-slate-700 dark:text-slate-300">
+            <option value="1">Single</option>
+            <option value="1.15">1.15x</option>
+            <option value="1.5" selected>1.5x</option>
+            <option value="2">Double</option>
+          </select>
+
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+
+          <!-- Lists -->
+          <button id="tbBulletList" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Bullet List"><i data-lucide="list" class="w-4 h-4"></i></button>
+          <button id="tbOrderedList" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Numbered List"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
+          <button id="tbTaskList" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Checklist"><i data-lucide="list-todo" class="w-4 h-4"></i></button>
+
+          <!-- Indents -->
+          <button id="tbOutdent" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Decrease Indent"><i data-lucide="outdent" class="w-4 h-4"></i></button>
+          <button id="tbIndent" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Increase Indent"><i data-lucide="indent" class="w-4 h-4"></i></button>
+
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+
+          <!-- Inserts -->
+          <button id="tbAddTable" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Insert Table"><i data-lucide="table-2" class="w-4 h-4"></i></button>
+          <button id="tbAddLink" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Insert Link"><i data-lucide="link" class="w-4 h-4"></i></button>
+          <button id="tbAddImage" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Insert Image"><i data-lucide="image" class="w-4 h-4"></i></button>
+          <button id="tbAddDivider" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Insert Line"><i data-lucide="minus" class="w-4 h-4"></i></button>
+          <button id="tbAddPageBreak" class="tb-btn p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Insert Page Break"><i data-lucide="scissors" class="w-4 h-4"></i></button>
+          
+          <span class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></span>
+          
+          <!-- Premium Elements Insertion -->
+          <button id="tbInsertCover" class="px-2.5 py-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1" title="Insert AI cover page">
+            <i data-lucide="notebook" class="w-3.5 h-3.5 text-brand-500"></i>
+            <span>Cover Page</span>
+          </button>
+          <button id="tbInsertCitation" class="px-2.5 py-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1" title="Insert bibliography citation">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-brand-500"></i>
+            <span>Citation</span>
+          </button>
+          <button id="tbInsertSignature" class="px-2.5 py-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1" title="Insert handwritten signature">
+            <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-brand-500"></i>
+            <span>Signature</span>
+          </button>
+          <button id="tbInsertQRCode" class="px-2.5 py-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1" title="Insert QR Code linking to a URL">
+            <i data-lucide="qr-code" class="w-3.5 h-3.5 text-brand-500"></i>
+            <span>QR Code</span>
+          </button>
+          
+          <!-- View adjustments -->
+          <div class="ml-auto flex items-center gap-2">
+            <button id="btnSidePanelToggle" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Format / Themes Panel"><i data-lucide="sliders" class="w-4 h-4"></i></button>
+            <button id="btnAIPanelToggle" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="AI Tools / Converter Panel"><i data-lucide="sparkles" class="w-4 h-4"></i></button>
+            <button id="btnCommentPanelToggle" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300" title="Comments System"><i data-lucide="message-square" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+
+        <!-- Table Operations Floating Mini-bar (Hidden by default) -->
+        <div id="tableBubbleMenu" class="hidden absolute glass shadow-lg rounded-xl p-1.5 border border-slate-200 z-30 flex items-center gap-1 text-xs">
+          <button id="tblAddColBefore" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300" title="Add Column Before"><i data-lucide="plus" class="w-3.5 h-3.5 rotate-90"></i></button>
+          <button id="tblAddColAfter" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300" title="Add Column After"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+          <button id="tblDelCol" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300" title="Delete Column"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <span class="w-px h-4 bg-slate-200 dark:bg-slate-700"></span>
+          <button id="tblAddRowBefore" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300" title="Add Row Before"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+          <button id="tblAddRowAfter" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300" title="Add Row After"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+          <button id="tblDelRow" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300" title="Delete Row"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <span class="w-px h-4 bg-slate-200 dark:bg-slate-700"></span>
+          <button id="tblDelete" class="p-1.5 hover:bg-red-50 text-red-500 rounded" title="Delete Table"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+        </div>
+
+        <!-- AI Inline Popover Menu (Appears on selecting text) -->
+        <div id="aiTextBubbleMenu" class="hidden absolute glass shadow-lg rounded-xl p-1 border border-brand-500/20 z-40 flex items-center gap-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+          <span class="pl-2 pr-1 text-brand-500 flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI:</span>
+          <button id="aiBubbleGrammar" class="px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center gap-1">Fix Grammar</button>
+          <button id="aiBubbleProfessional" class="px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center gap-1">Rewrite Prof</button>
+          <button id="aiBubbleAcademic" class="px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center gap-1">Academic</button>
+          <button id="aiBubbleSummarize" class="px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center gap-1">Summarize</button>
+          <button id="aiBubbleShorten" class="px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center gap-1">Shorten</button>
+          <button id="aiBubbleComment" class="px-2 py-1.5 bg-brand-50 dark:bg-brand-900/30 text-brand-500 hover:bg-brand-100 rounded flex items-center gap-1 ml-1"><i data-lucide="message-square" class="w-3 h-3"></i> Comment</button>
+        </div>
+
+        <!-- Editor Viewport + Sidebars Workspace -->
+        <div class="workspace-container flex-1">
+          
+          <!-- Central Document Editor Frame -->
+          <div class="editor-viewport" id="editorViewport">
+            <!-- Drag and drop images cover overlay -->
+            <div id="dragOverOverlay" class="drag-over-overlay">
+              <div class="text-center">
+                <i data-lucide="upload-cloud" class="w-12 h-12 text-brand-500 mx-auto mb-2 animate-bounce"></i>
+                <p>Drop file here to insert inside document</p>
+                <span class="text-xs text-slate-400">Supports images</span>
+              </div>
+            </div>
+
+            <!-- Scalable document stack canvas -->
+            <div class="document-canvas" id="documentCanvas">
+              <!-- Page Container -->
+              <div id="editorPage" class="page-container theme-default" contenteditable="true">
+                <!-- TipTap rich text content editor mounts inside this -->
+              </div>
+            </div>
+
+            <!-- Document Zoom Controls overlay -->
+            <div class="zoom-controls absolute bottom-6 right-6 glass p-2 rounded-xl border border-slate-200/50 flex items-center gap-3 shadow-md z-30">
+              <button id="btnZoomOut" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+              <span id="zoomPercent" class="text-xs font-bold text-slate-700 dark:text-slate-300">100%</span>
+              <button id="btnZoomIn" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+
+          <!-- SIDEBAR 1: Layout & Templates Customizer Panel -->
+          <aside id="sidePanelLayout" class="side-panel hidden border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full overflow-y-auto p-5 space-y-6">
+            <div class="flex items-center justify-between border-b pb-3">
+              <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-brand-500"></i>
+                <span>Document Styles</span>
+              </h3>
+              <button id="btnCloseSideLayout" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- Styling Themes -->
+            <div class="space-y-2">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Style Presets</label>
+              <div class="grid grid-cols-1 gap-2">
+                <button class="theme-select-btn active border-2 border-brand-500 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg text-xs font-bold text-left flex items-center justify-between" data-theme="default">
+                  <span>Modern Minimalist (Default)</span>
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-brand-500"></i>
+                </button>
+                <button class="theme-select-btn border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 p-2.5 rounded-lg text-xs font-bold text-left flex items-center justify-between" data-theme="academic">
+                  <span>Academic (Lora Serif)</span>
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-transparent"></i>
+                </button>
+                <button class="theme-select-btn border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 p-2.5 rounded-lg text-xs font-bold text-left flex items-center justify-between" data-theme="business">
+                  <span>Corporate Business (Outfit)</span>
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-transparent"></i>
+                </button>
+                <button class="theme-select-btn border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 p-2.5 rounded-lg text-xs font-bold text-left flex items-center justify-between" data-theme="legal">
+                  <span>Legal Formal (Playfair)</span>
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-transparent"></i>
+                </button>
+                <button class="theme-select-btn border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 p-2.5 rounded-lg text-xs font-bold text-left flex items-center justify-between" data-theme="notes">
+                  <span>Handwritten Notes (Caveat)</span>
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-transparent"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Page Size & Margins -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Page Layout</label>
+              
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label for="pageSizeSelect" class="text-[11px] text-slate-400 font-medium">Page Size</label>
+                  <select id="pageSizeSelect" class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+                    <option value="A4" selected>A4 Size</option>
+                    <option value="Letter">Letter Size</option>
+                    <option value="Legal">Legal Size</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="pageOrientationSelect" class="text-[11px] text-slate-400 font-medium">Orientation</label>
+                  <select id="pageOrientationSelect" class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+                    <option value="portrait" selected>Portrait</option>
+                    <option value="landscape">Landscape</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label for="pageMarginSelect" class="text-[11px] text-slate-400 font-medium">Margins</label>
+                <select id="pageMarginSelect" class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+                  <option value="normal" selected>Normal (1.0 in)</option>
+                  <option value="narrow">Narrow (0.5 in)</option>
+                  <option value="wide">Wide (1.5 in)</option>
+                  <option value="custom">Custom Margins...</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom Headers & Footers -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Headers & Footers</label>
+              <div>
+                <label for="headerTextInput" class="text-[11px] text-slate-400 font-medium">Header Text</label>
+                <input id="headerTextInput" type="text" placeholder="Enter header text..." class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+              </div>
+              <div>
+                <label for="footerTextInput" class="text-[11px] text-slate-400 font-medium">Footer Text</label>
+                <input id="footerTextInput" type="text" placeholder="Enter footer text..." class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-slate-600 dark:text-slate-300">Show Page Numbers</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="togglePageNumbers" class="sr-only peer" checked>
+                  <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:width-4 after:transition-all peer-checked:bg-brand-500"></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Watermark Customization -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Watermark</label>
+              <div>
+                <label for="watermarkTextInput" class="text-[11px] text-slate-400 font-medium">Watermark Text</label>
+                <input id="watermarkTextInput" type="text" placeholder="DRAFT, CONFIDENTIAL..." class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label for="watermarkOpacitySlider" class="text-[11px] text-slate-400 font-medium">Opacity</label>
+                  <input id="watermarkOpacitySlider" type="range" min="0" max="0.3" step="0.01" value="0.08" class="w-full accent-brand-500 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div>
+                  <label for="watermarkAngleInput" class="text-[11px] text-slate-400 font-medium">Angle (Deg)</label>
+                  <input id="watermarkAngleInput" type="number" value="-45" class="w-full text-xs p-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Custom Style Preset -->
+            <button id="btnSaveCustomTheme" class="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-lg text-xs font-bold transition-all">
+              Save Current Style as Reusable Theme
+            </button>
+          </aside>
+
+          <!-- SIDEBAR 2: AI Enhancer & Raw Text Converter Panel -->
+          <aside id="sidePanelAI" class="side-panel hidden border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full overflow-y-auto p-5 space-y-6">
+            <div class="flex items-center justify-between border-b pb-3">
+              <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-4 h-4 text-brand-500"></i>
+                <span>AI Enhancement Assistant</span>
+              </h3>
+              <button id="btnCloseSideAI" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- Conversion tool tab -->
+            <div class="space-y-3">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Raw Plain Text Importer</label>
+              <p class="text-[10px] text-slate-400">Import files or paste text block here to format it and insert into the editor position.</p>
+              <textarea id="aiImportRawText" rows="6" placeholder="Paste unformatted text..." class="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              <button id="btnAIImportConvert" class="w-full py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+                <span>Format & Insert at Cursor</span>
+              </button>
+            </div>
+
+            <!-- Text enhancements buttons -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Highlight & Refine</label>
+              <p class="text-[10px] text-slate-400">Select text in the editor first, then click one of the actions below:</p>
+              
+              <div class="grid grid-cols-2 gap-2">
+                <button class="ai-action-btn flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-left text-xs font-semibold" data-mode="grammar">
+                  <i data-lucide="spell-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+                  <span>Fix Grammar</span>
+                </button>
+                <button class="ai-action-btn flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-left text-xs font-semibold" data-mode="professional">
+                  <i data-lucide="briefcase" class="w-3.5 h-3.5 text-blue-500"></i>
+                  <span>Professional</span>
+                </button>
+                <button class="ai-action-btn flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-left text-xs font-semibold" data-mode="academic">
+                  <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-purple-500"></i>
+                  <span>Academic</span>
+                </button>
+                <button class="ai-action-btn flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-left text-xs font-semibold" data-mode="summarize">
+                  <i data-lucide="align-left" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span>Summarize</span>
+                </button>
+                <button class="ai-action-btn flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-left text-xs font-semibold" data-mode="expand">
+                  <i data-lucide="maximize" class="w-3.5 h-3.5 text-sky-500"></i>
+                  <span>Expand</span>
+                </button>
+                <button class="ai-action-btn flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-left text-xs font-semibold" data-mode="shorten">
+                  <i data-lucide="minimize" class="w-3.5 h-3.5 text-rose-500"></i>
+                  <span>Shorten</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Q&A Document Formatter -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="help-circle" class="w-3.5 h-3.5 text-brand-500"></i>
+                <span>Q&A Formatter</span>
+              </label>
+              <p class="text-[10px] text-slate-400">Select plain text Q&A in the editor first, then click format to style it with colored bars & notes callouts.</p>
+              <button id="btnAIFormatQA" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white dark:bg-brand-500 dark:hover:bg-brand-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                <i data-lucide="layout-template" class="w-3.5 h-3.5"></i>
+                <span>Format Selection as Q&A</span>
+              </button>
+            </div>
+
+            <!-- Auto Table of Contents generator -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Document Tools</label>
+              <button id="btnAIGenerateTOC" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2">
+                <i data-lucide="list-collapse" class="w-4 h-4 text-brand-500"></i>
+                <span>Generate Table of Contents</span>
+              </button>
+              <button id="btnAIGenerateTitles" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2">
+                <i data-lucide="heading" class="w-4 h-4 text-brand-500"></i>
+                <span>Suggest Title Alternatives</span>
+              </button>
+            </div>
+
+            <!-- Version History in Side-panel -->
+            <div class="space-y-3 pt-3 border-t">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                <span>Version History</span>
+                <button id="btnCreateVersionSnapshot" class="text-[10px] text-brand-500 hover:underline" title="Save current snapshot">Save Now</button>
+              </label>
+              <div class="space-y-1.5 max-h-[200px] overflow-y-auto" id="versionHistoryList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </aside>
+
+          <!-- SIDEBAR 3: Collaboration & Comments Panel -->
+          <aside id="sidePanelComments" class="side-panel hidden border-l border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full overflow-y-auto p-5 space-y-6">
+            <div class="flex items-center justify-between border-b pb-3">
+              <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                <i data-lucide="message-square" class="w-4 h-4 text-brand-500"></i>
+                <span>Review & Comments</span>
+              </h3>
+              <button id="btnCloseSideComments" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- Track changes mode toggle -->
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300">Suggestion Mode</h4>
+                <p class="text-[9px] text-slate-400">Track additions & deletions visually</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggleSuggestionMode" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:width-4 after:transition-all peer-checked:bg-brand-500"></div>
+              </label>
+            </div>
+
+            <!-- Comments feed list -->
+            <div class="space-y-3 flex-1 flex flex-col overflow-hidden">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Comments list</label>
+              
+              <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="commentsListFeed">
+                <!-- Comments list -->
+              </div>
+              
+              <!-- Add Comment Form -->
+              <div class="pt-3 border-t space-y-2">
+                <label for="newCommentText" class="text-[10px] text-slate-400 font-medium">Add Comment on Selected Text</label>
+                <textarea id="newCommentText" rows="2" placeholder="Type review comment..." class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+                <button id="btnAddComment" class="w-full py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">
+                  Post Comment
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- MODALS SYSTEM -->
+
+  <!-- Modal 1: New Document Templates Selection Modal -->
+  <div id="modalTemplates" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div class="glass-card max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 dark:text-white">Choose a Document Template</h2>
+          <p class="text-xs text-slate-400">Select a pre-designed layout structure to kickstart your work</p>
+        </div>
+        <button id="btnCloseTemplatesModal" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 flex flex-col md:flex-row gap-6">
+        <!-- Templates Category Navigation -->
+        <div class="w-full md:w-48 flex flex-row md:flex-col gap-1 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 pb-4 md:pb-0 md:pr-4 overflow-x-auto whitespace-nowrap" id="templateModalCategories">
+          <!-- Categories filled dynamically -->
+        </div>
+
+        <!-- Templates grid -->
+        <div class="flex-1">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="modalTemplatesGrid">
+            <!-- Templates cards populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: API Keys & AI Settings Modal -->
+  <div id="modalAPIConfig" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-card max-w-md w-full p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="key" class="text-brand-500"></i>
+          <span>AI Configuration Settings</span>
+        </h2>
+        <button id="btnCloseAPIModal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-brand-50 dark:bg-brand-900/20 p-3 rounded-lg text-xs text-brand-700 dark:text-brand-300">
+          <strong>Dual Support Enabled:</strong> By default, formatting and rewrites use a powerful **local server regex/dictionary heuristic engine** for free. To enable real LLM completions, input your API key below.
+        </div>
+
+        <div>
+          <label for="aiProviderSelect" class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">AI Provider</label>
+          <select id="aiProviderSelect" class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+            <option value="openai">OpenAI (GPT-4o / GPT-3.5)</option>
+            <option value="gemini">Google Gemini (Flash/Pro)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="inputAPIKey" class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Enter API Key</label>
+          <input id="inputAPIKey" type="password" placeholder="sk-..." class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+          <span class="text-[9px] text-slate-400 block mt-1">Keys are saved locally in your browser's LocalStorage and are not sent to any third-party databases.</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t pt-4">
+        <button id="btnCancelAPIConfig" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-white transition-all">Cancel</button>
+        <button id="btnSaveAPIConfig" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Handwritten Signature insert modal -->
+  <div id="modalSignature" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-card max-w-md w-full p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="pen-tool" class="text-brand-500"></i>
+          <span>Add Handwritten Signature</span>
+        </h2>
+        <button id="btnCloseSigModal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Canvas Box -->
+      <div class="space-y-4">
+        <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900 overflow-hidden">
+          <canvas id="sigCanvas" width="400" height="200" class="w-full cursor-crosshair block bg-white"></canvas>
+        </div>
+        <div class="flex justify-between items-center text-xs text-slate-400">
+          <span>Draw your signature above inside the white canvas</span>
+          <button id="btnClearSig" class="text-brand-500 font-bold hover:underline">Clear Canvas</button>
+        </div>
+        
+        <div>
+          <label for="sigNameInput" class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Or Type Signature Name</label>
+          <input id="sigNameInput" type="text" placeholder="John Doe" class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t pt-4">
+        <button id="btnCancelSig" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-white transition-all">Cancel</button>
+        <button id="btnInsertSig" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">Insert Signature</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: QR Code insertion modal -->
+  <div id="modalQRCode" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-card max-w-sm w-full p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="qr-code" class="text-brand-500"></i>
+          <span>Insert QR Code Link</span>
+        </h2>
+        <button id="btnCloseQRModal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label for="inputQRLink" class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Target Link URL</label>
+          <input id="inputQRLink" type="url" value="https://google.com" placeholder="https://example.com" class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+        </div>
+        <div class="flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+          <div id="qrCodePreview" class="w-32 h-32 flex items-center justify-center bg-white p-2 border border-slate-200 rounded-lg"></div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t pt-4">
+        <button id="btnCancelQR" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-white transition-all">Cancel</button>
+        <button id="btnInsertQR" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">Insert QR Code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Document Share Modal -->
+  <div id="modalShare" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-card max-w-md w-full p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="share-2" class="text-brand-500"></i>
+          <span>Share Document Access</span>
+        </h2>
+        <button id="btnCloseShareModal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Access Settings</label>
+          <select id="sharePermission" class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none">
+            <option value="view">Anyone with the link can view</option>
+            <option value="comment">Anyone with the link can review & comment</option>
+            <option value="edit">Anyone with the link can edit (Mock Multi-user)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Generated Link</label>
+          <div class="flex gap-2">
+            <input id="shareLinkInput" type="text" readonly value="https://smartdoc.studio/share/d48fd39c" class="flex-1 text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none text-slate-500">
+            <button id="btnCopyShareLink" class="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t pt-4">
+        <button id="btnCancelShare" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-white transition-all">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Custom Table creation modal -->
+  <div id="modalInsertTable" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-card max-w-sm w-full p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <i data-lucide="table-2" class="text-brand-500"></i>
+          <span>Insert Table</span>
+        </h2>
+        <button id="btnCloseTableModal" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Visual Grid Selector -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block">Visual Size Selector</label>
+          <div class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+            <div id="tableGridSelector" class="grid grid-cols-10 gap-1 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer">
+              <!-- Cells generated dynamically in JS -->
+            </div>
+            <div id="tableGridLabel" class="text-xs font-bold text-brand-500 mt-2">3 x 3 Table</div>
+          </div>
+        </div>
+
+        <!-- Numeric Inputs -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="inputTableRows" class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Rows</label>
+            <input id="inputTableRows" type="number" min="1" max="50" value="3" class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-white">
+          </div>
+          <div>
+            <label for="inputTableCols" class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Columns</label>
+            <input id="inputTableCols" type="number" min="1" max="20" value="3" class="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-white">
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-2">
+          <input id="inputTableHeaderRow" type="checkbox" checked class="rounded border-slate-300 dark:border-slate-700 text-brand-500 focus:ring-brand-500">
+          <label for="inputTableHeaderRow" class="text-xs text-slate-600 dark:text-slate-400 font-medium">Include header row</label>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t pt-4">
+        <button id="btnCancelTable" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-white transition-all">Cancel</button>
+        <button id="btnInsertTableConfirm" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition-all">Insert Table</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: General Processing Loading Overlay -->
+  <div id="processingOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center z-[100] gap-4 animate-fade-in">
+    <div class="w-12 h-12 rounded-full border-4 border-slate-300 border-t-brand-500 animate-spin"></div>
+    <p id="processingMessage" class="text-sm font-bold text-white tracking-wide">Processing...</p>
+  </div>
+
+  <!-- JavaScript module initialization -->
+  <script type="module">
+    // Load and execute main app script
+    import './js/app.js';
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "id": "nketvc8qham",
+  "title": "New Study Notes Guide",
+  "content": "<h1>Lecture Notes: Operating Systems Basics</h1><p>Key topics covered in Class 10 (June 2026). Check this before the exam on next Friday!</p><h2>1. What is virtual memory?</h2><p>Virtual memory is an abstraction layer that makes it feel like we have a massive pool of RAM, even if the physical chips are tiny. The OS swaps data block pages back and forth from the hard disk (paging files).</p><blockquote><p>Remember: Swapping to disk is extremely slow! Minimize swap thrashing by adjusting page sizing.</p></blockquote><h2>2. Key Concepts Checklist</h2><ul data-type=\"taskList\"><li class=\"flex items-start gap-2 my-1\" data-checked=\"false\" data-type=\"taskItem\"><label><input type=\"checkbox\"><span></span></label><div><p></p></div></li></ul><ul><li><p>Page Faults: triggers an interrupt when RAM doesn't hold the page</p></li><li><p>TLB Cache: hardware lookup index for page translation</p></li><li><p>LRU Replacement: Least Recently Used eviction algorithm</p></li></ul><h2>3. TLB Cache vs RAM Lookup speeds</h2><p>Quick lookup times compared:</p><table class=\"border-collapse border border-slate-300 w-full my-4\" style=\"\"><colgroup><col><col><col></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>Hardware Layer</p></th><th colspan=\"1\" rowspan=\"1\"><p>Access Time (ns)</p></th><th colspan=\"1\" rowspan=\"1\"><p>Cost / MB</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>L1 Cache Register</p></td><td colspan=\"1\" rowspan=\"1\"><p>0.5 ns</p></td><td colspan=\"1\" rowspan=\"1\"><p>Very Expensive</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>TLB Index</p></td><td colspan=\"1\" rowspan=\"1\"><p>2.0 ns</p></td><td colspan=\"1\" rowspan=\"1\"><p>Expensive</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Standard RAM</p></td><td colspan=\"1\" rowspan=\"1\"><p>60.0 ns</p></td><td colspan=\"1\" rowspan=\"1\"><p>Moderate</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>SSD Page Swap</p></td><td colspan=\"1\" rowspan=\"1\"><p>50,000.0 ns</p></td><td colspan=\"1\" rowspan=\"1\"><p>Very Cheap</p></td></tr></tbody></table><p>Focus on studying the LRU algorithm code exercises tonight!</p><table class=\"border-collapse border border-slate-300 w-full my-4\" style=\"\"><colgroup><col><col><col></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><table class=\"border-collapse border border-slate-300 w-full my-4\" style=\"\"><colgroup><col><col><col></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><table class=\"border-collapse border border-slate-300 w-full my-4\" style=\"\"><colgroup><col><col><col></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr></tbody></table></td></tr></tbody></table></th><th colspan=\"1\" rowspan=\"1\"><p></p></th><th colspan=\"1\" rowspan=\"1\"><p></p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td><td colspan=\"1\" rowspan=\"1\"><p></p></td></tr></tbody></table>",
+  "raw_text": "",
+  "styles": {
+    "themeColor": "#f59e0b",
+    "fontFamily": "Caveat",
+    "fontSize": "16px",
+    "lineSpacing": "1.5",
+    "margins": {
+      "top": "0.8in",
+      "bottom": "0.8in",
+      "left": "0.8in",
+      "right": "0.8in"
+    },
+    "watermarkText": "",
+    "watermarkOpacity": 0.1,
+    "watermarkAngle": -45,
+    "headerText": "My Lecture Notes - Computer Systems",
+    "footerText": "Exam Study Guide 2026",
+    "pageNumbers": true,
+    "orientation": "portrait",
+    "pageSize": "A4"
+  },
+  "comments": [],
+  "versions": [
+    {
+      "version_id": "2c941814-8d07-4f39-ba31-478a882af703",
+      "timestamp": "2026-06-12T08:59:28.345780",
+      "title": "Initial version",
+      "content": "\n      <h1>Lecture Notes: Operating Systems Basics</h1>\n      <p>Key topics covered in Class 10 (June 2026). Check this before the exam on next Friday!</p>\n      \n      <h2>1. What is virtual memory?</h2>\n      <p>Virtual memory is an abstraction layer that makes it feel like we have a massive pool of RAM, even if the physical chips are tiny. The OS swaps data block pages back and forth from the hard disk (paging files).</p>\n      <blockquote>\n        Remember: Swapping to disk is extremely slow! Minimize swap thrashing by adjusting page sizing.\n      </blockquote>\n      \n      <h2>2. Key Concepts Checklist</h2>\n      <ul data-type=\"taskList\">\n        <li><label><input type=\"checkbox\" checked></label><div>Page Faults: triggers an interrupt when RAM doesn't hold the page</div></li>\n        <li><label><input type=\"checkbox\" checked></label><div>TLB Cache: hardware lookup index for page translation</div></li>\n        <li><label><input type=\"checkbox\"></label><div>LRU Replacement: Least Recently Used eviction algorithm</div></li>\n      </ul>\n\n      <h2>3. TLB Cache vs RAM Lookup speeds</h2>\n      <p>Quick lookup times compared:</p>\n      <table>\n        <thead>\n          <tr>\n            <th>Hardware Layer</th>\n            <th>Access Time (ns)</th>\n            <th>Cost / MB</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr>\n            <td>L1 Cache Register</td>\n            <td>0.5 ns</td>\n            <td>Very Expensive</td>\n          </tr>\n          <tr>\n            <td>TLB Index</td>\n            <td>2.0 ns</td>\n            <td>Expensive</td>\n          </tr>\n          <tr>\n            <td>Standard RAM</td>\n            <td>60.0 ns</td>\n            <td>Moderate</td>\n          </tr>\n          <tr>\n            <td>SSD Page Swap</td>\n            <td>50,000.0 ns</td>\n            <td>Very Cheap</td>\n          </tr>\n        </tbody>\n      </table>\n      <p>Focus on studying the LRU algorithm code exercises tonight!</p>\n    ",
+      "styles": {
+        "themeColor": "#f59e0b",
+        "fontFamily": "Caveat",
+        "fontSize": "16px",
+        "lineSpacing": "1.5",
+        "margins": {
+          "top": "0.8in",
+          "bottom": "0.8in",
+          "left": "0.8in",
+          "right": "0.8in"
+        },
+        "watermarkText": "",
+        "watermarkOpacity": 0.1,
+        "watermarkAngle": -45,
+        "headerText": "My Lecture Notes - Computer Systems",
+        "footerText": "Exam Study Guide 2026",
+        "pageNumbers": true,
+        "orientation": "portrait",
+        "pageSize": "A4"
+      }
+    }
+  ],
+  "created_at": "2026-06-12T08:59:28.345780",
+  "updated_at": "2026-06-12T09:01:10.730535"
+}
